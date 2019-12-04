@@ -1,0 +1,120 @@
+#include <SoftwareSerial.h>
+#include <math.h>
+#define RADIANS_TO_DEGREES 57296 // 57.2958
+/*
+
+  .ino
+  HRo,
+  1. Serial reading 1x char, the 23NOV2019
+  2. Serial sending 2 ramps, the 30NOV2019
+
+*/
+
+int LED = 12;
+const int analogInPin = A0;  // Analog input pin that the potentiometer is attached to
+const int analogOutPin = 9; // Analog output pin that the LED is attached to
+
+bool flag1;
+int cptr1 = 0;
+int sensorValue = 0;        // value read from the pot
+int sensorValuePrev = 0;
+int outputValue = 0;        // value output to the PWM (analog out)
+
+int offsetserialPort = 512;
+
+int i = 0;
+int j = 0;
+uint8_t adj = 0;
+uint8_t opp = 0;
+uint8_t hyp = 100;
+
+//float
+float angleA = 0;
+float angleRadians = 0;
+int  angleRadiansInt = 0;
+
+int radiansA;
+int angleA1 = radiansA * RADIANS_TO_DEGREES;
+
+float TxAxis1 = 0;
+float TxAxis2 = 0;
+float TxAxis3 = 0; //uint16_t TxAxis3 = 0;
+
+int Tx_Axis1 = 0;
+int Tx_Axis2 = 0;
+int Tx_Axis3 = 0; //uint16_t TxAxis3 = 0;
+
+///float
+String TxAxis1String;
+char str[7];
+
+//TRIGONOMETRY: https://forum.arduino.cc/index.php?topic=425334.15
+//float radiansA = acos((pow(AB, 2) + pow(AC, 2) - pow(BC, 2) ) / (2.0 * AB * AC));
+//float angleA = radiansA * RADIANS_TO_DEGREES;
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600); //9600
+  pinMode(LED, OUTPUT);
+
+}
+void printHex(unsigned int numberToPrint)
+{
+  //  if (numberToPrint >= 16)
+  //    printHex(numberToPrint / 16);
+  //  Serial.print("0123456789ABCDEF"[numberToPrint % 16]);
+}
+
+void loop()
+{
+  char data = Serial.read();
+
+  // read the analog in value:  sensorValue = analogRead(analogInPin);
+  // map it to the range of the analog out: outputValue = map(sensorValue, 0, 1023, 0, 255);
+  // change the analog out value: analogWrite(analogOutPin, outputValue);
+
+  for (cptr1 = 0; cptr1 <= 720 - 1; +1) // for(angleA=1; angleA<=360-1; +1)
+  {
+    angleRadians = ((angleA / 180) * PI); //3.14159);
+    if (cptr1 < 360) {
+      angleA ++;
+    }
+    if (cptr1 >= 360) {
+      angleA --;
+    }
+    if (cptr1 >= 720) {
+      cptr1 = 0;
+    }
+
+    cptr1 ++;
+
+    //adj = sqrt((pow(hyp, 2)-pow(opp, 2)));
+    //adj = hyp-opp;
+
+    TxAxis1 = (sin(angleRadians));//10000; //+1
+    TxAxis2 = (cos(angleRadians));
+    TxAxis3 = angleA;
+
+    Tx_Axis1 = (int)((TxAxis1 * 100) + 1000);
+    Tx_Axis2 = (int)((TxAxis2 * 100) + 1000);
+    angleRadiansInt = (int)(angleRadians * 100);
+
+    //Serial.print("angleRadians: ");
+    //Serial.print(angleRadians);
+
+    //Serial.print("TxAxis1: ");
+    //Serial.print(TxAxis1);
+    //Serial.print(" # ");
+    //Serial.print("Tx_Axis1: ");
+    //Serial.print(Tx_Axis1);
+    //Serial.println("#");
+
+    char bufferStreamSize[32];
+    snprintf(bufferStreamSize, sizeof(bufferStreamSize), "#0x%04X0x%04X0x%04X", angleRadiansInt, Tx_Axis1, Tx_Axis2);
+    Serial.println(bufferStreamSize);
+
+    //delay(1);
+
+  }
+
+}
